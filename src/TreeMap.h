@@ -25,45 +25,142 @@ namespace aisdi
 		using iterator = Iterator;
 		using const_iterator = ConstIterator;
 
+	private:
+		struct Node {
+			Node* left = nullptr;
+			Node* right = nullptr;
+			Node* parent = nullptr;
+			value_type data;
+			Node() {}
+			Node(const key_type& key) : left(nullptr), right(nullptr), data(std::make_pair(key, mapped_type{})) {}
+
+			Node* searchMin(Node* node)
+			{
+				while (node->left)
+					node = node->left;
+				return node;
+			}
+
+			Node* searchMax(Node* node)
+			{
+				while (node->right)
+					node = node->right;
+				return node;
+			}
+		};
+		Node* head = nullptr;
+		size_t size = 0;
+
+
+		const_iterator search(Node* startNode, const key_type& key) const
+		{
+			Node* next = startNode;
+			Node* act = nullptr;
+			while (next != nullptr)
+			{
+				act = next;
+				if (act->data.first == key)
+					return ConstIterator(act);
+				if (act->data.first > key)
+					next = act->left;
+				else
+					next = act->right;
+			}
+			return cend();
+		}
+
+
+
+	public:
+
+		void initialize()
+		{
+			head = new Node;
+			head->right = head;
+			head->left = head;
+			head->parent = nullptr;
+		}
+
+		void freeMemory(Node* node)
+		{
+			if (node->left != nullptr)
+				freeMemory(node->left);
+			if (node->right != nullptr)
+				freeMemory(node->right);
+			delete (node);
+		}
+
 		TreeMap()
 		{
-			setup();
+			initialize();
+		}
+
+		~TreeMap()
+		{
+			if (!isEmpty())
+				freeMemory(head->left);
+			if(head) delete head;
 		}
 
 		TreeMap(std::initializer_list<value_type> list)
 		{
-			setup();
+			initialize();
 			for (auto element : list)
 				operator[](element.first) = element.second;
 		}
 
 		TreeMap(const TreeMap& other)
 		{
-			setup();
-			for (auto element : other)
+			initialize();
+			if (other.isEmpty())
+				return;
+			for (auto it = other.begin(); it != other.end(); it++)
 			{
-				operator[](element.first) = element.second;
+				operator[](it->first) = it->second;
 			}
 		}
 
-		TreeMap(TreeMap&& other) : TreeMap()
+		TreeMap(TreeMap&& other)
 		{
-			swap(*this, other);
+			head = other.head;
+			other.head = nullptr;
+			size = other.size;
+			other.size = 0;
 		}
 
-		TreeMap& operator=(TreeMap other)
+		TreeMap& operator=(const TreeMap& other)
 		{
-			if (&other == this)
+			if (other.head == head)
 				return *this;
-			swap(*this, other);
+			if (!isEmpty())
+			{
+				freeMemory(head->left);
+				head->right = head;
+				head->left = head;
+				size = 0;
+			}
+			if (other.isEmpty())
+				return *this;
+	
+			for (auto it = other.begin(); it != other.end(); it++)
+				operator[](it->first) = it->second;
+
 			return *this;
 		}
 
-		~TreeMap()
+		TreeMap& operator=(TreeMap&& other)
 		{
 			if (!isEmpty())
-				postOrderTraversalFreeingMemory(head->left);
-			delete head;
+			{
+				freeMemory(head->left);
+				head->right = head;
+				head->left = head;
+			}
+			head = other.head;
+			other.head = head;
+			size = other.size;
+			other.size = 0;
+			return *this;
 		}
 
 		bool isEmpty() const
@@ -73,107 +170,113 @@ namespace aisdi
 
 		mapped_type& operator[](const key_type& key)
 		{
-			if (isEmpty()) {
-				BinaryNode *newNode = new BinaryNode(key);
+			if (!head)
+				initialize();
+			if (isEmpty())
+			{
+				Node* newNode = new Node(key);
+				head->left = newNode;
+				head->right = nullptr;
 				newNode->parent = head;
-				head->left = newNode; // list no longer empty
-				head->right = nullptr; // important for check against decrementing begin() in empty map
-				size++;
+				++size;
 				return newNode->data.second;
 			}
-			BinaryNode *next = head->left, *current = nullptr;
-			while (next != nullptr) {
-				current = next;
-				if (key == current->data.first) { //node with this key already exists
-					return current->data.second;
-				}
-				if (key < current->data.first)
-					next = current->left;
+			Node* next = head->left;
+			Node* act = nullptr;
+			while (next != nullptr)
+			{
+				act = next;
+				if (act->data.first == key)
+					return act->data.second;
+				if (act->data.first > key)
+					next = act->left;
 				else
-					next = current->right;
+					next = act->right;
 			}
-
-			BinaryNode *newNode = new BinaryNode(key);
-			newNode->parent = current;
-			if (key < current->data.first)
-				current->left = newNode;
+			Node* newNode = new Node(key);
+			newNode->parent = act;
+			if (key < act->data.first)
+				act->left = newNode;
 			else
-				current->right = newNode;
-			size++;
+				act->right = newNode;
+			++size;
 			return newNode->data.second;
 		}
 
 		const mapped_type& valueOf(const key_type& key) const
 		{
-			if (isEmpty())
-				throw std::out_of_range("map is empty");
-			const_iterator position = find(key);
-			if (position == cend())
-				throw std::out_of_range("key does not exist");
-			return position->second;
+			if (isEmpty()) throw std::out_of_range("empty map");
+			ConstIterator found = find(key);
+			if (found == cend()) throw std::out_of_range("key not found");
+			return found->second;
 		}
 
 		mapped_type& valueOf(const key_type& key)
 		{
-			if (isEmpty())
-				throw std::out_of_range("map is empty");
-			iterator position = find(key);
-			if (position == end())
-				throw std::out_of_range("key does not exist");
-			return position->second;
+			if (isEmpty()) throw std::out_of_range("empty map");
+			Iterator found = find(key);
+			if (found == cend()) throw std::out_of_range("key not found");
+			return found->second;
 		}
 
 		const_iterator find(const key_type& key) const
 		{
-			if (isEmpty())
-				return cend();
+			if (isEmpty()) return cend();
 			return search(head->left, key);
 		}
 
 		iterator find(const key_type& key)
 		{
-			if (size == 0)
-				return end();
+			if (isEmpty()) return end();
 			return search(head->left, key);
 		}
 
 		void remove(const key_type& key)
 		{
-			if (isEmpty())
-				throw std::out_of_range("cannot remove, empty list");
-			auto nodeBeingRemoved = find(key).currentNode;
-			if (nodeBeingRemoved == head)
-				throw std::out_of_range("cannot remove, element does not exist");
-
-			if (nodeBeingRemoved->left == nullptr)
-				moveTree(nodeBeingRemoved, nodeBeingRemoved->right);
-			else if (nodeBeingRemoved->right == nullptr)
-				moveTree(nodeBeingRemoved, nodeBeingRemoved->left);
-			else {
-				BinaryNode *tmp = getMinimalSubtreeNode(nodeBeingRemoved->right);
-				if (tmp->parent != nodeBeingRemoved) {
-					moveTree(tmp, tmp->right);
-					tmp->right = nodeBeingRemoved->right;
-					tmp->right->parent = tmp;
-				}
-				moveTree(nodeBeingRemoved, tmp);
-				tmp->left = nodeBeingRemoved->left;
-				tmp->left->parent = tmp;
-			}
-
-			delete nodeBeingRemoved;
-			size--;
-			if (size == 0) { // empty map detection
-				head->right = head;
-				head->left = head;
-			}
+			remove(find(key));
 		}
 
 		void remove(const const_iterator& it)
 		{
-			if (it == end())
-				throw std::out_of_range("cannot erase end");
-			remove(it->first);
+			if (isEmpty()) throw std::out_of_range("cannot remove from empty list");
+			Node* node = it.node;
+			if(node == head) throw std::out_of_range("cannot remove, element does not exist");
+			auto tempIt = it;
+			Node* succ = nullptr;
+
+			if (!node->right && !node->left)
+				node->parent = nullptr;
+			else if (!node->left)
+				succ = node->right;
+			else if (!node->right)
+				succ = node->left;
+			else
+				succ = (++tempIt).node;
+			if (succ != head && succ)
+			{
+				succ->parent = node->parent;
+
+				if (succ == succ->parent->left)
+					succ->parent->left = nullptr;
+				else
+					succ->parent->right = nullptr;
+
+				if (node == node->parent->left)
+					node->parent->left = succ;
+				else
+					node->parent->right = succ;
+
+				if (node->right && node->right != succ) succ->right = node->right;
+				if (node->left && node->left != succ) succ->left = node->left;
+			}
+			delete node;
+			--size;
+			if (isEmpty())
+			{
+				head->left = head;
+				head->right = head;
+			}
+
 		}
 
 		size_type getSize() const
@@ -183,24 +286,22 @@ namespace aisdi
 
 		bool operator==(const TreeMap& other) const
 		{
-			if (size != other.size)
-				return false;
+			if (size != other.size) return false;
 			auto otherIt = other.cbegin();
-			auto ownIt = cbegin();
-
+			auto thisIt = cbegin();
 			for (size_type i = 0; i < size; i++)
 			{
-				if (!(otherIt->first == ownIt->first && otherIt->second == ownIt->second))
+				if (!(otherIt->first == thisIt->first && otherIt->second == thisIt->second))
 					return false;
-				otherIt++;
-				ownIt++;
+				++otherIt;
+				++thisIt;
 			}
 			return true;
 		}
 
 		bool operator!=(const TreeMap& other) const
 		{
-			return !operator==(other);
+			return !(*this == other);
 		}
 
 		iterator begin()
@@ -215,11 +316,11 @@ namespace aisdi
 
 		const_iterator cbegin() const
 		{
-			BinaryNode *leftMostNode = head;
+			Node* minNode = head;
 			if (head == head->left) return ConstIterator(head); // empty map
-			while (leftMostNode->left != nullptr)
-				leftMostNode = leftMostNode->left;
-			return ConstIterator(leftMostNode);
+			while (minNode->left)
+				minNode = minNode->left;
+			return ConstIterator(minNode);
 		}
 
 		const_iterator cend() const
@@ -236,77 +337,6 @@ namespace aisdi
 		{
 			return cend();
 		}
-
-	private:
-		class BinaryNode {
-		public:
-			BinaryNode *left;
-			BinaryNode *right;
-			BinaryNode *parent;
-			value_type data;
-			BinaryNode() {}
-			BinaryNode(const key_type& key) : left(nullptr), right(nullptr), data(std::make_pair(key, mapped_type{})) {}
-
-		};
-		BinaryNode *head; // super head
-		size_type size;
-
-		void setup()
-		{
-			head = new BinaryNode();
-			head->left = head; // required to detect empty list
-			head->right = head; // used for detecting illegal --begin() with empty collection
-			head->parent = nullptr;
-			size = 0;
-		}
-
-		const_iterator search(BinaryNode *startNode, const key_type& key) const
-		{
-			while (startNode != nullptr) {
-				if (key == startNode->data.first)
-					return const_iterator(startNode);
-				if (key < startNode->data.first)
-					startNode = startNode->left;
-				else
-					startNode = startNode->right;
-			}
-			return cend();
-		}
-
-		BinaryNode* getMinimalSubtreeNode(BinaryNode *node)
-		{
-			while (node->left != nullptr)
-				node = node->left;
-			return node;
-		}
-
-		void moveTree(BinaryNode *node1, BinaryNode *node2)
-		{
-			if (node1->parent == nullptr)
-				head->left = node2;
-			else if (node1 == node1->parent->left)
-				node1->parent->left = node2;
-			else
-				node1->parent->right = node2;
-			if (node2 != nullptr)
-				node2->parent = node1->parent;
-		}
-
-		void postOrderTraversalFreeingMemory(BinaryNode *node)
-		{
-			if (node->left != nullptr)
-				postOrderTraversalFreeingMemory(node->left);
-			if (node->right != nullptr)
-				postOrderTraversalFreeingMemory(node->right);
-			delete (node);
-		}
-
-		void swap(TreeMap& first, TreeMap& second)
-		{
-			using std::swap;
-			swap(first.head, second.head);
-			swap(first.size, second.size);
-		}
 	};
 
 	template <typename KeyType, typename ValueType>
@@ -317,77 +347,88 @@ namespace aisdi
 		using iterator_category = std::bidirectional_iterator_tag;
 		using value_type = typename TreeMap::value_type;
 		using pointer = const typename TreeMap::value_type*;
+		friend class TreeMap;
+	private:
+		Node* node;
 
-		BinaryNode *currentNode;
+	public:
+
 
 		explicit ConstIterator()
 		{}
-
-		explicit ConstIterator(BinaryNode *startNode) : currentNode(startNode)
+		
+		ConstIterator(Node* node): node(node)
 		{}
 
-		ConstIterator(const ConstIterator& other) : currentNode(other.currentNode)
-		{}
+		ConstIterator(const ConstIterator& other): node(other.node)
+		{
+		}
 
 		ConstIterator& operator++()
 		{
-			if (currentNode->parent == nullptr)
-				throw std::out_of_range("Cannot increment end");
-			if (currentNode->right != nullptr) {
-				currentNode = currentNode->right;
-				while (currentNode->left != nullptr)
-					currentNode = currentNode->left;
+			if (!node->parent)
+				throw std::out_of_range("can't increment end");
+			if (node->right)
+			{
+				node = node->right;
+				while (node->left)
+					node = node->left;
 				return *this;
 			}
-			BinaryNode *tmp = currentNode->parent;
-			while (tmp != nullptr && currentNode == tmp->right) {
-				currentNode = tmp;
-				tmp = tmp->parent;
+			else
+			{
+				Node* tmp = node->parent;
+				while (tmp && node == tmp->right)
+				{
+					node = tmp;
+					tmp = tmp->parent;
+				}
+				node = tmp;
+				return *this;
 			}
-			currentNode = tmp;
-			return *this;
 		}
 
 		ConstIterator operator++(int)
 		{
-			ConstIterator old(*this);
+			ConstIterator temp(*this);
 			operator++();
-			return old;
+			return temp;
 		}
 
 		ConstIterator& operator--()
 		{
-			if (currentNode->right == currentNode)
+			if(node ->right == node)
 				throw std::out_of_range("Cannot decrement begin, empty map");
-			if (currentNode->left != nullptr) {
-				currentNode = currentNode->left;
-				while (currentNode->right != nullptr)
-					currentNode = currentNode->right;
+			if (node->left) 
+			{
+				node = node->left;
+				while (node->right)
+					node = node->right;
 				return *this;
 			}
-			BinaryNode *tmp = currentNode->parent;
-			while (tmp != nullptr && currentNode == tmp->left) {
-				if (tmp->parent == nullptr)
-					throw std::out_of_range("Cannot decrement begin");
-				currentNode = tmp;
+
+			Node* tmp = node->parent;
+			while (tmp && tmp->right != node)
+			{
+				node = tmp;
 				tmp = tmp->parent;
 			}
-			currentNode = tmp;
+			node = tmp;
 			return *this;
 		}
 
 		ConstIterator operator--(int)
 		{
-			ConstIterator old(*this);
+			ConstIterator temp(*this);
 			operator--();
-			return old;
+			return temp;
 		}
 
 		reference operator*() const
 		{
-			if (currentNode->right == currentNode)
+			if(node->parent == nullptr)
 				throw std::out_of_range("Cannot dereference end");
-			return currentNode->data;
+			return node->data;
 		}
 
 		pointer operator->() const
@@ -397,13 +438,15 @@ namespace aisdi
 
 		bool operator==(const ConstIterator& other) const
 		{
-			return this->currentNode == other.currentNode;
+			return node == other.node;
 		}
 
 		bool operator!=(const ConstIterator& other) const
 		{
 			return !(*this == other);
 		}
+
+	
 	};
 
 	template <typename KeyType, typename ValueType>

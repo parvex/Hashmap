@@ -82,8 +82,8 @@ public:
 
   const mapped_type& valueOf(const key_type& key) const
   {
-    (void)key;
-    throw std::runtime_error("TODO");
+	 return (find(key)*).second;
+
   }
 
   mapped_type& valueOf(const key_type& key)

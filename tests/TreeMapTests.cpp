@@ -384,6 +384,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEndIterator_WhenDereferencing_ThenOperationTh
   BOOST_CHECK_THROW(map.cend()->second, std::out_of_range);
 }
 
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenConstIterator_WhenDereferencing_ThenItemIsReturned,
                               K,
                               TestedKeyTypes)
@@ -392,7 +393,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenConstIterator_WhenDereferencing_ThenItemIsRet
   map[42] = "Answer";
 
   const auto it = map.cbegin();
-
+ 
   BOOST_CHECK_EQUAL(it->first, 42);
   BOOST_CHECK_EQUAL(it->second, "Answer");
 }
