@@ -8,8 +8,10 @@
 #include <utility>
 #include <vector>
 #include <atomic>
+#include <forward_list>
 namespace aisdi
 {
+
 
 template <typename KeyType, typename ValueType>
 class HashMap
@@ -26,18 +28,36 @@ public:
   class Iterator;
   using iterator = Iterator;
   using const_iterator = ConstIterator;
-
+  using list = std::vector<value_type>;
+  typename std::forward_list<value_type>::iterator listit;
 public:
 
 
 private:
-	static const unsigned hashes = 65536;
-	std::vector<value_type>* vectab[hashes]{};
+	static const unsigned buckets = 16384;
+	size_t firstHash = {};
+	size_t lastHash = {};
+	list* tab[buckets] = {};
 
 public:
 
   HashMap()
   {}
+
+  ~HashMap()
+  {
+	  for (int i = firstHash; i <= lastHash; ++i)
+	  {
+		  if (tab[i])
+			  delete tab[i];
+	  }
+  }
+
+  size_t getHash(key_type key)
+  {
+	  return ((unsigned)(key) * 12 + 3321) % buckets;
+  }
+
 
   HashMap(std::initializer_list<value_type> list)
   {
@@ -76,13 +96,30 @@ public:
 
   mapped_type& operator[](const key_type& key)
   {
-	 // size_t hash = std::hash<key_type>{}(key) % hashes;
-	  throw std::runtime_error("TODO");
+	  size_t hash = getHash(key) % buckets;
+	  if (hash < firstHash) firstHash = hash;
+	  if (hash > lastHash) lastHash = hash;
+	  if (!tab[hash])
+	  {
+		  tab[hash] = new list;
+		  tab[hash]->push_back(std::make_pair(key, mapped_type{}));
+		  return (*tab[hash])[((*tab[hash]).size()) - 1].second;
+
+	  }
+	  auto it = tab[hash]->begin();
+	  for (; it!=tab[hash]->end(); ++it)
+	  {
+		  if (it->first == key) break;
+	  }
+	  if (it != tab[hash]->end()) return it->second;
+	  else tab[hash]->push_back(std::make_pair(key, mapped_type{}));
+	  return (*tab[hash])[((*tab[hash]).size()) - 1].second;
+	  
   }
 
   const mapped_type& valueOf(const key_type& key) const
   {
-	 return (find(key)*).second;
+	 return (find(key)).second;
 
   }
 
@@ -135,6 +172,7 @@ public:
   iterator begin()
   {
     throw std::runtime_error("TODO");
+\
   }
 
   iterator end()
@@ -172,19 +210,42 @@ public:
   using value_type = typename HashMap::value_type;
   using pointer = const typename HashMap::value_type*;
 
+private:
+	size_t hashnr;
+	size_t vecnr;
+	bool end = 0;
+
+public:
+
   explicit ConstIterator()
   {}
 
-  ConstIterator(const ConstIterator& other)
+  ConstIterator(size_t vecnr, size_t hashnr) vecnr(vecnr), hashnr(hashnr)
+  {}
+
+  ConstIterator(const ConstIterator& other): vecnr(other.vecnr), hashnr(other.hashnr)
   {
-    (void)other;
-    throw std::runtime_error("TODO");
   }
 
   ConstIterator& operator++()
   {
-    throw std::runtime_error("TODO");
-  }
+	  if (end) throw std::out_of_range("can't increment end");
+	  
+	  if (vecnr < (*(tab[hashnr])).size() - 1)
+	  {
+		  ++vecnr;
+		  return;
+	  }
+
+	  for (size_t i = hashnr; i <= lastHash; ++i)
+	  {
+
+	  }
+
+
+
+	  return *this;
+   }
 
   ConstIterator operator++(int)
   {

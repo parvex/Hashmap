@@ -1,14 +1,19 @@
 #include <cstddef>
 #include <cstdlib>
 #include <string>
-
+#include <map>
 #include "TreeMap.h"
+#include "/mnt/c/Users/parve/Desktop/MAPY/src/TreeMap.h"
+#include "/mnt/c/Users/parve/Desktop/MAPY/src/HashMap.h"
+
+using namespace std;
+
 
 namespace
 {
 
 template <typename K, typename V>
-using Map = aisdi::Map<K, V>;
+using Map = aisdi::TreeMap<K, V>;
 
 void perfomTest()
 {
@@ -17,7 +22,7 @@ void perfomTest()
 }
 
 } // namespace
-
+ 
 int main(int argc, char** argv)
 {
   const std::size_t repeatCount = argc > 1 ? std::atoll(argv[1]) : 10000;

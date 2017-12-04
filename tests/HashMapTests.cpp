@@ -1,247 +1,247 @@
-//#include <HashMap.h>
-//
-//#include <cstdint>
-//#include <string>
-//#include <map>
-//#include <atomic>
-//#include <boost/test/unit_test.hpp>
-//
-//#include <boost/mpl/list.hpp>
-//
-//namespace
-//{
-//
-//class OperationCountingObject
-//{
-//public:
-//  OperationCountingObject(int value_ = 0)
-//    : value(value_)
-//  {
-//    ++constructedObjects;
-//  }
-//
-//  OperationCountingObject(const OperationCountingObject& other)
-//    : value(std::move(other.value))
-//  {
-//    ++constructedObjects;
-//    ++copiedObjects;
-//  }
-//
-//  OperationCountingObject(OperationCountingObject&& other)
-//    : value(other.value)
-//  {
-//    ++constructedObjects;
-//    ++movedObjects;
-//  }
-//
-//  ~OperationCountingObject()
-//  {
-//    ++destroyedObjects;
-//  }
-//
-//  OperationCountingObject& operator=(const OperationCountingObject& other)
-//  {
-//    ++assignedObjects;
-//    value = other.value;
-//    return *this;
-//  }
-//
-//  OperationCountingObject& operator=(OperationCountingObject&& other)
-//  {
-//    ++assignedObjects;
-//    ++movedObjects;
-//    value = std::move(other.value);
-//    return *this;
-//  }
-//
-//  operator int() const
-//  {
-//    return value;
-//  }
-//
-//  static void resetCounters()
-//  {
-//    constructedObjects = 0;
-//    destroyedObjects = 0;
-//    copiedObjects = 0;
-//    movedObjects = 0;
-//    assignedObjects = 0;
-//  }
-//
-//  static std::size_t constructedObjectsCount()
-//  {
-//    return constructedObjects;
-//  }
-//
-//  static std::size_t destroyedObjectsCount()
-//  {
-//    return destroyedObjects;
-//  }
-//
-//  static std::size_t copiedObjectsCount()
-//  {
-//    return copiedObjects;
-//  }
-//
-//  static std::size_t movedObjectsCount()
-//  {
-//    return movedObjects;
-//  }
-//
-//  static std::size_t assignedObjectsCount()
-//  {
-//    return assignedObjects;
-//  }
-//
-//private:
-//  int value;
-//
-//  static std::size_t constructedObjects;
-//  static std::size_t destroyedObjects;
-//  static std::size_t copiedObjects;
-//  static std::size_t movedObjects;
-//  static std::size_t assignedObjects;
-//};
-//
-//std::size_t OperationCountingObject::constructedObjects = 0;
-//std::size_t OperationCountingObject::destroyedObjects = 0;
-//std::size_t OperationCountingObject::copiedObjects = 0;
-//std::size_t OperationCountingObject::movedObjects = 0;
-//std::size_t OperationCountingObject::assignedObjects = 0 ;
-//
-//std::ostream& operator<<(std::ostream& out, const OperationCountingObject& obj)
-//{
-//  return out << '<' << static_cast<int>(obj) << '>';
-//}
-//
-//struct Fixture
-//{
-//  Fixture()
-//  {
-//    OperationCountingObject::resetCounters();
-//  }
-//};
-//
-//} // namespace
-//
-//template <typename K>
-//using Map = aisdi::HashMap<K, std::string>;
-//
-//using TestedKeyTypes = boost::mpl::list<std::int32_t, std::uint64_t, OperationCountingObject>;
-//
-//using std::begin;
-//using std::end;
-//
-//BOOST_FIXTURE_TEST_SUITE(HashMapTests, Fixture)
-//
-//template <typename K>
-//void thenMapContainsItems(const Map<K>& map,
-//                          const std::map<K, std::string>& expected)
-//{
-//  BOOST_CHECK_EQUAL(map.getSize(), expected.size());
-//
-//  for (const auto& item : expected)
-//  {
-//    const auto it = map.find(item.first);
-//    BOOST_REQUIRE_MESSAGE(it != end(map), "Missing required item with key: " << item.first);
-//    BOOST_CHECK_MESSAGE(it->second == item.second,
-//                        "Wrong value in map for key: " << item.first
-//                        << " (expected: \"" << item.second
-//                        << "\" got: \"" << it->second << "\")");
-//  }
-//}
-//
-//template <typename T>
-//void thenConstructedObjectsCountWas(std::size_t count)
-//{
-//  (void) count;
-//  // unable to check it (in a simple way) for all objects, hence template specialization.
-//}
-//
-//template <typename T>
-//void thenDestroyedObjectsCountWas(std::size_t count)
-//{
-//  (void) count;
-//  // unable to check it (in a simple way) for all objects, hence template specialization.
-//}
-//
-//template <typename T>
-//void thenCopiedObjectsCountWas(std::size_t count)
-//{
-//  (void) count;
-//  // unable to check it (in a simple way) for all objects, hence template specialization.
-//}
-//
-//template <typename T>
-//void thenMovedObjectsCountWas(std::size_t count)
-//{
-//  (void) count;
-//  // unable to check it (in a simple way) for all objects, hence template specialization.
-//}
-//
-//template <typename T>
-//void thenAssignedObjectsCountWas(std::size_t count)
-//{
-//  (void) count;
-//  // unable to check it (in a simple way) for all objects, hence template specialization.
-//}
-//
-//template <typename T>
-//void thenNoItemsWereCopiedOrMoved()
-//{
-//  // unable to check it (in a simple way) for all objects, hence template specialization.
-//}
-//
-//template <>
-//void thenConstructedObjectsCountWas<OperationCountingObject>(std::size_t count)
-//{
-//  BOOST_CHECK_EQUAL(OperationCountingObject::constructedObjectsCount(), count);
-//}
-//
-//template <>
-//void thenDestroyedObjectsCountWas<OperationCountingObject>(std::size_t count)
-//{
-//  BOOST_CHECK_EQUAL(OperationCountingObject::destroyedObjectsCount(), count);
-//}
-//
-//template <>
-//void thenCopiedObjectsCountWas<OperationCountingObject>(std::size_t count)
-//{
-//  BOOST_CHECK_EQUAL(OperationCountingObject::copiedObjectsCount(), count);
-//}
-//
-//template <>
-//void thenMovedObjectsCountWas<OperationCountingObject>(std::size_t count)
-//{
-//  BOOST_CHECK_EQUAL(OperationCountingObject::movedObjectsCount(), count);
-//}
-//
-//template <>
-//void thenAssignedObjectsCountWas<OperationCountingObject>(std::size_t count)
-//{
-//  BOOST_CHECK_EQUAL(OperationCountingObject::assignedObjectsCount(), count);
-//}
-//
-//BOOST_AUTO_TEST_CASE_TEMPLATE(GivenMap_WhenCreatedWithDefaultConstructor_ThenItIsEmpty,
-//                              K,
-//                              TestedKeyTypes)
-//{
-//  const Map<K> map;
-//
-//  BOOST_CHECK(map.isEmpty());
-//}
-//
-//BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenAddingItem_ThenItIsNoLongerEmpty,
-//                              K,
-//                              TestedKeyTypes)
-//{
-//  Map<K> map;
-//
-//  map[K{}] = std::string{};
-//
-//  BOOST_CHECK(!map.isEmpty());
-//}
-//
+#include <HashMap.h>
+
+#include <cstdint>
+#include <string>
+#include <map>
+#include <atomic>
+#include <boost/test/unit_test.hpp>
+
+#include <boost/mpl/list.hpp>
+
+namespace
+{
+
+class OperationCountingObject
+{
+public:
+  OperationCountingObject(int value_ = 0)
+    : value(value_)
+  {
+    ++constructedObjects;
+  }
+
+  OperationCountingObject(const OperationCountingObject& other)
+    : value(std::move(other.value))
+  {
+    ++constructedObjects;
+    ++copiedObjects;
+  }
+
+  OperationCountingObject(OperationCountingObject&& other)
+    : value(other.value)
+  {
+    ++constructedObjects;
+    ++movedObjects;
+  }
+
+  ~OperationCountingObject()
+  {
+    ++destroyedObjects;
+  }
+
+  OperationCountingObject& operator=(const OperationCountingObject& other)
+  {
+    ++assignedObjects;
+    value = other.value;
+    return *this;
+  }
+
+  OperationCountingObject& operator=(OperationCountingObject&& other)
+  {
+    ++assignedObjects;
+    ++movedObjects;
+    value = std::move(other.value);
+    return *this;
+  }
+
+  operator int() const
+  {
+    return value;
+  }
+
+  static void resetCounters()
+  {
+    constructedObjects = 0;
+    destroyedObjects = 0;
+    copiedObjects = 0;
+    movedObjects = 0;
+    assignedObjects = 0;
+  }
+
+  static std::size_t constructedObjectsCount()
+  {
+    return constructedObjects;
+  }
+
+  static std::size_t destroyedObjectsCount()
+  {
+    return destroyedObjects;
+  }
+
+  static std::size_t copiedObjectsCount()
+  {
+    return copiedObjects;
+  }
+
+  static std::size_t movedObjectsCount()
+  {
+    return movedObjects;
+  }
+
+  static std::size_t assignedObjectsCount()
+  {
+    return assignedObjects;
+  }
+
+private:
+  int value;
+
+  static std::size_t constructedObjects;
+  static std::size_t destroyedObjects;
+  static std::size_t copiedObjects;
+  static std::size_t movedObjects;
+  static std::size_t assignedObjects;
+};
+
+std::size_t OperationCountingObject::constructedObjects = 0;
+std::size_t OperationCountingObject::destroyedObjects = 0;
+std::size_t OperationCountingObject::copiedObjects = 0;
+std::size_t OperationCountingObject::movedObjects = 0;
+std::size_t OperationCountingObject::assignedObjects = 0 ;
+
+std::ostream& operator<<(std::ostream& out, const OperationCountingObject& obj)
+{
+  return out << '<' << static_cast<int>(obj) << '>';
+}
+
+struct Fixture
+{
+  Fixture()
+  {
+    OperationCountingObject::resetCounters();
+  }
+};
+
+} // namespace
+
+template <typename K>
+using Map = aisdi::HashMap<K, std::string>;
+
+using TestedKeyTypes = boost::mpl::list<std::int32_t, std::uint64_t, OperationCountingObject>;
+
+using std::begin;
+using std::end;
+
+BOOST_FIXTURE_TEST_SUITE(HashMapTests, Fixture)
+
+template <typename K>
+void thenMapContainsItems(const Map<K>& map,
+                          const std::map<K, std::string>& expected)
+{
+  BOOST_CHECK_EQUAL(map.getSize(), expected.size());
+
+  for (const auto& item : expected)
+  {
+    const auto it = map.find(item.first);
+    BOOST_REQUIRE_MESSAGE(it != end(map), "Missing required item with key: " << item.first);
+    BOOST_CHECK_MESSAGE(it->second == item.second,
+                        "Wrong value in map for key: " << item.first
+                        << " (expected: \"" << item.second
+                        << "\" got: \"" << it->second << "\")");
+  }
+}
+
+template <typename T>
+void thenConstructedObjectsCountWas(std::size_t count)
+{
+  (void) count;
+  // unable to check it (in a simple way) for all objects, hence template specialization.
+}
+
+template <typename T>
+void thenDestroyedObjectsCountWas(std::size_t count)
+{
+  (void) count;
+  // unable to check it (in a simple way) for all objects, hence template specialization.
+}
+
+template <typename T>
+void thenCopiedObjectsCountWas(std::size_t count)
+{
+  (void) count;
+  // unable to check it (in a simple way) for all objects, hence template specialization.
+}
+
+template <typename T>
+void thenMovedObjectsCountWas(std::size_t count)
+{
+  (void) count;
+  // unable to check it (in a simple way) for all objects, hence template specialization.
+}
+
+template <typename T>
+void thenAssignedObjectsCountWas(std::size_t count)
+{
+  (void) count;
+  // unable to check it (in a simple way) for all objects, hence template specialization.
+}
+
+template <typename T>
+void thenNoItemsWereCopiedOrMoved()
+{
+  // unable to check it (in a simple way) for all objects, hence template specialization.
+}
+
+template <>
+void thenConstructedObjectsCountWas<OperationCountingObject>(std::size_t count)
+{
+  BOOST_CHECK_EQUAL(OperationCountingObject::constructedObjectsCount(), count);
+}
+
+template <>
+void thenDestroyedObjectsCountWas<OperationCountingObject>(std::size_t count)
+{
+  BOOST_CHECK_EQUAL(OperationCountingObject::destroyedObjectsCount(), count);
+}
+
+template <>
+void thenCopiedObjectsCountWas<OperationCountingObject>(std::size_t count)
+{
+  BOOST_CHECK_EQUAL(OperationCountingObject::copiedObjectsCount(), count);
+}
+
+template <>
+void thenMovedObjectsCountWas<OperationCountingObject>(std::size_t count)
+{
+  BOOST_CHECK_EQUAL(OperationCountingObject::movedObjectsCount(), count);
+}
+
+template <>
+void thenAssignedObjectsCountWas<OperationCountingObject>(std::size_t count)
+{
+  BOOST_CHECK_EQUAL(OperationCountingObject::assignedObjectsCount(), count);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenMap_WhenCreatedWithDefaultConstructor_ThenItIsEmpty,
+                              K,
+                              TestedKeyTypes)
+{
+  const Map<K> map;
+
+  BOOST_CHECK(map.isEmpty());
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenAddingItem_ThenItIsNoLongerEmpty,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map;
+
+  map[K{}] = std::string{};
+
+  BOOST_CHECK(!map.isEmpty());
+}
+
 //BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenGettingIterators_ThenBeginEqualsEnd,
 //                              K,
 //                              TestedKeyTypes)
@@ -789,5 +789,5 @@
 //
 //// ConstIterator is tested via Iterator methods.
 //// If Iterator methods are to be changed, then new ConstIterator tests are required.
-//
-//BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

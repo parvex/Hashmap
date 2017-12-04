@@ -156,8 +156,9 @@ namespace aisdi
 				head->right = head;
 				head->left = head;
 			}
+			Node* temp = head;
 			head = other.head;
-			other.head = head;
+			other.head = temp;
 			size = other.size;
 			other.size = 0;
 			return *this;
@@ -245,7 +246,10 @@ namespace aisdi
 			Node* succ = nullptr;
 
 			if (!node->right && !node->left)
-				node->parent = nullptr;
+			{
+				if(node == node->parent->left) node->parent->left = nullptr;
+				else node->parent->right = nullptr;
+			}
 			else if (!node->left)
 				succ = node->right;
 			else if (!node->right)

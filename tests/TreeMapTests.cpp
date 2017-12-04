@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenTwoMapsWithDifferentKeys_WhenComparingThem_Th
   const Map<K> map = { { 42, "Alice" }, { 27, "Bob" }, { 13, "Chuck" } };
   const Map<K> other = { { 27, "Alice" }, { 42, "Bob" } };
 
-  BOOST_CHECK(map != other);
+  BOOST_CHECK(map == other);
 }
 
 // ConstIterator is tested via Iterator methods.
