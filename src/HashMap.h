@@ -37,21 +37,29 @@ private:
 	static const unsigned buckets = 16384;
 	size_t firstHash = {};
 	size_t lastHash = {};
-	list* tab[buckets] = {};
+	list** tab = {};
 	size_t size = {};
 public:
 
-  HashMap()
+	HashMap() : tab(new list*[buckets]())
   {}
 
   ~HashMap()
   {
-	  for (size_t i = firstHash; i <= lastHash; ++i)
-		  if (tab[i])
-		  {
-			  delete tab[i];
-			  tab[i] = nullptr;
-		  }
+	  clearMemory();
+  }
+  void clearMemory()
+  {
+	  if (tab)
+	  {
+		  for (size_t i = firstHash; i <= lastHash; ++i)
+			  if (tab[i])
+			  {
+				  delete tab[i];
+				  tab[i] = nullptr;
+			  }
+		  delete tab;
+	  }
   }
 
   size_t getHash(key_type key)
@@ -60,29 +68,35 @@ public:
   }
 
 
-  HashMap(std::initializer_list<value_type> list)
+  HashMap(std::initializer_list<value_type> list) : tab(new aisdi::LinkedList<value_type>*[buckets]())
   {
 	  for (auto element : list)
 		  operator[](element.first) = element.second;
 
   }
 
-  HashMap(const HashMap& other)
+  HashMap(const HashMap& other) : tab(new list*[buckets]())
   {
-	  if (other.isEmpty())
-		  return;
+	  if (other.isEmpty()) return;
 	  for (auto it = other.begin(); it != other.end(); it++)
 		  operator[](it->first) = it->second;
   }
 
   HashMap(HashMap&& other)
   {
-    (void)other;
-    throw std::runtime_error("TODO");
+	  tab = other.tab;
+	  other.tab = nullptr;
+	  size = other.size;
+	  firstHash = other.firstHash;
+	  lastHash = other.lastHash;
+	  other.firstHash = 0;
+	  other.lastHash = 0;
+	  other.size = 0;
   }
 
   HashMap& operator=(const HashMap& other)
   {
+	  if (!tab) tab = new list*[buckets]();
 	  if (other.tab == tab) return *this;
 	  for (size_t i = firstHash; i <= lastHash; ++i)
 		  if (tab[i])
@@ -93,6 +107,9 @@ public:
 
 	  for (auto it = other.begin(); it != other.end(); it++)
 		  operator[](it->first) = it->second;
+	  firstHash = other.firstHash;
+	  lastHash = other.lastHash;
+	  size = other.size;
 
 	  return *this;
 
@@ -100,8 +117,16 @@ public:
 
   HashMap& operator=(HashMap&& other)
   {
-    (void)other;
-    throw std::runtime_error("TODO");
+	  clearMemory();
+	  tab = other.tab;
+	  other.tab = nullptr;
+	  size = other.size;
+	  other.size = 0;
+	  firstHash = other.firstHash;
+	  lastHash = other.lastHash;
+	  other.firstHash = 0;
+	  other.lastHash = 0;
+	  return *this;
   }
 
   bool isEmpty() const
@@ -111,6 +136,7 @@ public:
 
   mapped_type& operator[](const key_type& key)
   {
+	  if (!tab) tab = new list*[buckets]();
 	  size_t hash = getHash(key) % buckets;
 	  if (hash < firstHash || isEmpty()) 
 		  firstHash = hash;
@@ -181,12 +207,23 @@ public:
 
   void remove(const const_iterator& it)
   {
-	  (void)it;
-		  throw std::runtime_error("TODO");
-	  //if (it == cend()) throw std::out_of_range("element doesn't exist");
-	  //list& vec = (*tab[it.hashnr]);
-	  //vec.erase(vec.begin() + it.vecnr - 1);
-	  //--size;
+	  if (it == cend()) throw std::out_of_range("element doesn't exist");
+	  list& vec = (*tab[it.hashnr]);
+	  vec.erase(it.it);
+	  --size;
+	  if (it.hashnr == firstHash)
+	  {
+		  size_t i;
+		  for (i = it.hashnr + 1; i <= lastHash + 1 && tab[i] == nullptr; ++i);
+
+		  if (tab[i]) firstHash = i;
+	  }
+	  else if (it.hashnr == lastHash)
+	  {
+		  size_t i;
+		  for (i = it.hashnr; i >= firstHash && tab[i] == nullptr; --i);
+		  if (tab[i]) lastHash = i;
+	  }
   }
 
   size_type getSize() const
@@ -266,6 +303,10 @@ public:
 
   ConstIterator(size_t hashnr,const HashMap&  mapref, bool end = 0): hashnr(hashnr), mapref(mapref), end(end)
   {
+	  if (!mapref.tab)
+	  {
+		  end = true; return;
+	  }
 	  if (end) return;
 	  it = mapref.tab[hashnr]->begin();
   }
@@ -276,6 +317,10 @@ public:
 
   ConstIterator& operator++()
   {
+	  if (!mapref.tab)
+	  {
+		  end = true; return *this;
+	  }
 	  if (end) throw std::out_of_range("can't increment end");
 	  ++it;
 	  if (it != mapref.tab[hashnr]->end())
@@ -287,8 +332,11 @@ public:
 		  ;
 	  }
 
-	  if (mapref.tab[i]) 
+	  if (mapref.tab[i] && i < mapref.buckets)
+	  {
 		  it = mapref.tab[i]->begin();
+		  hashnr = i;
+	  }
 	  else 
 		  end = true;
 
