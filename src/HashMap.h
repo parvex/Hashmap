@@ -10,6 +10,7 @@
 #include <atomic>
 #include <forward_list>
 #include <LinkedList.h>
+#include <time.h>
 namespace aisdi
 {
 
@@ -52,7 +53,7 @@ public:
   {
 	  if (tab)
 	  {
-		  for (size_t i = firstHash; i <= lastHash; ++i)
+		  for (size_t i = 0; i <= buckets; ++i)
 			  if (tab[i])
 			  {
 				  delete tab[i];
@@ -62,9 +63,9 @@ public:
 	  }
   }
 
-  size_t getHash(key_type key)
+  size_t getHash(key_type key) const
   {
-	  return ((unsigned)(key) * 12 + 3321) % buckets;
+	  return ((unsigned)(key) + 3321) % buckets;
   }
 
 
@@ -156,8 +157,11 @@ public:
 		  if (it->first == key) break;
 	  }
 	  if (it != tab[hash]->end()) return it->second;
-	  else tab[hash]->append(std::make_pair(key, mapped_type{}));
-	  ++size;
+	  else
+	  {
+	   tab[hash]->append(std::make_pair(key, mapped_type{}));
+	   ++size;
+	  }
 	  return (*tab[hash]).getlast().second;
 	  
   }
@@ -181,23 +185,30 @@ public:
 
   const_iterator find(const key_type& key) const
   {
-	  if (isEmpty()) return cend();
-	  auto it = cbegin();
-	  for (; it != end(); ++it)
-		  if (it->first == key) break;
-	  return it;
+	  size_t hash = getHash(key);
+	  if (tab[hash])
+	  {
+		  auto it = tab[hash]->begin();
+		  for (; it != tab[hash]->end() && it->first != key; ++it);
+		  if (it != tab[hash]->end())
+			  return Iterator(hash, *this, false, it);
+	  }
+
+	  return end();
   }
 
   iterator find(const key_type& key)
   {
-	  if (isEmpty()) return cend();
-	  auto it = begin();
-	  for (; it != end(); ++it)
+	  size_t hash = getHash(key);
+	  if (tab[hash])
 	  {
-		  if (it->first == key)
-			  break;
+		  auto it = tab[hash]->begin();
+		  for (; it != tab[hash]->end() && it->first != key; ++it);
+		  if (it != tab[hash]->end())
+			  return Iterator(hash, *this, false, it);  
 	  }
-	  return it;
+	  
+	  return end();
   }
 
   void remove(const key_type& key)
@@ -221,7 +232,7 @@ public:
 	  else if (it.hashnr == lastHash)
 	  {
 		  size_t i;
-		  for (i = it.hashnr; i >= firstHash && tab[i] == nullptr; --i);
+		  for (i = it.hashnr-1; i >= firstHash && tab[i] == nullptr; --i);
 		  if (tab[i]) lastHash = i;
 	  }
   }
@@ -292,14 +303,18 @@ public:
   friend class HashMap;
 private:
 	size_t hashnr;
-	typename LinkedList<value_type>::Iterator it;
 	const HashMap& mapref;
-	bool end = 0;
+	bool end;
+	typename LinkedList<value_type>::Iterator it;
 	
 public:
 
   explicit ConstIterator()
   {}
+
+  ConstIterator(size_t hashnr, const HashMap&  mapref,  bool end, typename LinkedList<value_type>::Iterator iter) : hashnr(hashnr), mapref(mapref), end(end), it(iter)
+  {
+  }
 
   ConstIterator(size_t hashnr,const HashMap&  mapref, bool end = 0): hashnr(hashnr), mapref(mapref), end(end)
   {
@@ -311,7 +326,7 @@ public:
 	  it = mapref.tab[hashnr]->begin();
   }
 
-  ConstIterator(const ConstIterator& other):  hashnr(other.hashnr), it(other.it), mapref(other.mapref), end(other.end)
+  ConstIterator(const ConstIterator& other):  hashnr(other.hashnr), mapref(other.mapref), end(other.end), it(other.it)
   {
   }
 
@@ -417,6 +432,11 @@ public:
   Iterator(const ConstIterator& other)
 	  : ConstIterator(other)
   {}
+
+  Iterator(size_t hashnr, const HashMap&  mapref, bool end, typename LinkedList<value_type>::Iterator iter)
+	  : ConstIterator(hashnr, mapref,end,iter)
+  {
+  }
 
   Iterator& operator++()
   {

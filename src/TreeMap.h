@@ -54,7 +54,7 @@ namespace aisdi
 
 		const_iterator search(Node* startNode, const key_type& key) const
 		{
-			Node* next = startNode;
+ 			Node* next = startNode;
 			Node* act = nullptr;
 			while (next != nullptr)
 			{
@@ -258,7 +258,7 @@ namespace aisdi
 				succ = (++tempIt).node;
 			if (succ != head && succ)
 			{
-				succ->parent = node->parent;
+				
 
 				if (succ == succ->parent->left)
 					succ->parent->left = nullptr;
@@ -269,7 +269,7 @@ namespace aisdi
 					node->parent->left = succ;
 				else
 					node->parent->right = succ;
-
+				succ->parent = node->parent;
 				if (node->right && node->right != succ) succ->right = node->right;
 				if (node->left && node->left != succ) succ->left = node->left;
 			}
