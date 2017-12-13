@@ -20,7 +20,10 @@ void test_removing();
 
 void perfomTest()
 {
-	system("clear");
+	if (system("clear"))
+	{
+		;
+	}
 	std::cout << "-----------------------------------------------------------------------\n";
 	std::cout << "/Time Compare Test Menu/\n";
 	std::cout << "/1/ Compare speed of adding to maps\n";
@@ -54,12 +57,12 @@ void test_inserting()
 {
 
 	
-	aisdi::TreeMap<int, std::string> test_map;
-	aisdi::HashMap<int, std::string> test_tree;
+	aisdi::TreeMap<int, std::string> test_tree;
+	aisdi::HashMap<int, std::string> test_map;
 	srand(time(NULL));
 	auto t1 = std::chrono::high_resolution_clock::now();
 
-	while(test_tree.getSize() < 10000)
+	while(test_tree.getSize() < 100000)
 		test_tree[rand()] = "test";
 
 	auto t2 = std::chrono::high_resolution_clock::now();
@@ -67,7 +70,7 @@ void test_inserting()
 	std::cout << "TreeMap inserting took " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " milliseconds\n";
 
 	auto t3 = std::chrono::high_resolution_clock::now();
-	while (test_map.getSize() < 10000)
+	while (test_map.getSize() < 100000)
 		test_map[rand()] = "test";
 
 	auto t4 = std::chrono::high_resolution_clock::now();
@@ -80,29 +83,35 @@ void test_inserting()
 
 void test_dereferencing()
 {
-	aisdi::TreeMap<int, std::string> test_map;
-	aisdi::HashMap<int, std::string> test_tree;
+	aisdi::TreeMap<int, std::string> test_tree;
+	aisdi::HashMap<int, std::string> test_map;
 	
 
-	while (test_tree.getSize() < 1000)
-		test_tree[rand() % 50000] = "test";
-	while (test_map.getSize() < 1000)
-		test_map[rand() % 50000] = "test";
+	while (test_tree.getSize() < 100000)
+		test_tree[rand()] = "test";
+	while (test_map.getSize() < 100000)
+		test_map[rand()] = "test";
 
+	for(int i = 0; i <= 10000; ++i)
+	{
+		test_map[i] = "1";
+		test_tree[i] = "1";
+	}
+	std::string a;
 	auto t1 = std::chrono::high_resolution_clock::now();
-	for(int i = 1000; i < 3000; ++i)
-		test_map[i];
+	for(int i = 0; i < 10000; ++i)
+		test_map[i] = "changed";
 	auto t2 = std::chrono::high_resolution_clock::now();
 
-	std::cout << "| Map dereferencing took " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " milliseconds\n";
+	std::cout << "| Map dereferencing " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " milliseconds\n";
 
 	
 	auto t3 = std::chrono::high_resolution_clock::now();
-	for (int i = 1000; i < 3000; ++i)
-		test_tree[i];
+	for (int i = 0; i < 10000; ++i)
+		test_tree[i] = "changed";
 	auto t4 = std::chrono::high_resolution_clock::now();
 
-	std::cout << "| Tree dereferencing" << std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count() << " milliseconds\n";
+	std::cout << "| Tree dereferencing " << std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count() << " milliseconds\n";
 	getchar();
 	getchar();
 
@@ -113,10 +122,10 @@ void test_removing()
 {
 	aisdi::TreeMap<int, double> test_tree;
 	aisdi::HashMap<int, double> test_map;
-	while (test_tree.getSize() < 1000)
-		test_tree[rand()% 50000] = 2.123123;
-	while (test_map.getSize() < 1000)
-		test_map[rand()% 50000] = 2.1231312;
+	while (test_tree.getSize() < 100000)
+		test_tree[rand()] = 2.123123;
+	while (test_map.getSize() < 100000)
+		test_map[rand()] = 2.1231312;
 	
 	for (int i = 0; i < 1000; ++i)
 	{

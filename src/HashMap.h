@@ -9,7 +9,7 @@
 #include <vector>
 #include <atomic>
 #include <forward_list>
-#include <LinkedList.h>
+#include "LinkedList.h"
 #include <time.h>
 namespace aisdi
 {
@@ -53,7 +53,7 @@ public:
   {
 	  if (tab)
 	  {
-		  for (size_t i = 0; i <= buckets; ++i)
+		  for (size_t i = 0; i < buckets; ++i)
 			  if (tab[i])
 			  {
 				  delete tab[i];
@@ -65,7 +65,7 @@ public:
 
   size_t getHash(key_type key) const
   {
-	  return ((unsigned)(key) + 3321) % buckets;
+	  return std::hash<key_type>{}(key) % buckets;
   }
 
 
@@ -190,6 +190,7 @@ public:
 	  {
 		  auto it = tab[hash]->begin();
 		  for (; it != tab[hash]->end() && it->first != key; ++it);
+		  	
 		  if (it != tab[hash]->end())
 			  return Iterator(hash, *this, false, it);
 	  }

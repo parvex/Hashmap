@@ -1,2 +1,2 @@
-add_executable(aisdiMaps main.cpp TreeMap.h HashMap.h)
-add_dependencies(aisdiMaps check)
+add_executable(aisdiLinear main.cpp Vector.h LinkedList.h)
+add_dependencies(aisdiLinear check)

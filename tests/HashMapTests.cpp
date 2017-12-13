@@ -3,9 +3,8 @@
 #include <cstdint>
 #include <string>
 #include <map>
-#include <atomic>
+
 #include <boost/test/unit_test.hpp>
-#include <boost/system/config.hpp>
 
 #include <boost/mpl/list.hpp>
 
@@ -367,7 +366,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenBeginIterator_WhenDecrementing_ThenOperationT
                               TestedKeyTypes)
 {
   Map<K> map;
- 
+
   BOOST_CHECK_THROW(map.begin()--, std::out_of_range);
   BOOST_CHECK_THROW(--(map.begin()), std::out_of_range);
   BOOST_CHECK_THROW(map.cbegin()--, std::out_of_range);
@@ -792,3 +791,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenTwoMapsWithDifferentKeys_WhenComparingThem_Th
 // If Iterator methods are to be changed, then new ConstIterator tests are required.
 
 BOOST_AUTO_TEST_SUITE_END()
+
+namespace std
+{
+  template <> struct hash<OperationCountingObject>
+  {
+    size_t operator() (const OperationCountingObject & x) const
+    {
+      return hash<size_t>() (x);
+    }
+  };
+}

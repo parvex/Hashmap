@@ -384,7 +384,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEndIterator_WhenDereferencing_ThenOperationTh
   BOOST_CHECK_THROW(map.cend()->second, std::out_of_range);
 }
 
-
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenConstIterator_WhenDereferencing_ThenItemIsReturned,
                               K,
                               TestedKeyTypes)
@@ -393,7 +392,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenConstIterator_WhenDereferencing_ThenItemIsRet
   map[42] = "Answer";
 
   const auto it = map.cbegin();
- 
+
   BOOST_CHECK_EQUAL(it->first, 42);
   BOOST_CHECK_EQUAL(it->second, "Answer");
 }
@@ -791,3 +790,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenTwoMapsWithDifferentKeys_WhenComparingThem_Th
 // If Iterator methods are to be changed, then new ConstIterator tests are required.
 
 BOOST_AUTO_TEST_SUITE_END()
+
+
+namespace std
+{
+	template <> struct hash<OperationCountingObject>
+	{
+		size_t operator() (const OperationCountingObject & x) const
+		{
+			return hash<size_t>() (x);
+		}
+	};
+}

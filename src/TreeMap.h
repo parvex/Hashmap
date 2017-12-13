@@ -258,8 +258,6 @@ namespace aisdi
 				succ = (++tempIt).node;
 			if (succ != head && succ)
 			{
-				
-
 				if (succ == succ->parent->left)
 					succ->parent->left = nullptr;
 				else
